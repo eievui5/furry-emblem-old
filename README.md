@@ -10,9 +10,10 @@ A tactical RPG engine written in Rust for the Game Boy Advance
 ## Building
 
 Compiling Rust code for the GBA requires:
-	- Nightly Rust
-	- rust-src
-	- arm-none-eabi binutils
+
+- Nightly Rust
+- rust-src
+- arm-none-eabi binutils
 
 You can configure Rust with the following commands:
 ```
