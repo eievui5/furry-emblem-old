@@ -9,6 +9,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb18fff2e974c4b95a45f47398bb6ed5b040ccdaac9d41ed045d33dbe960f75f"
 
 [[package]]
+name = "bracer"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6559b8c3065745016f5cc2d1095273fe8a175e953c976426947ad828d6ba6fda"
+
+[[package]]
 name = "furry-emblem"
 version = "0.1.0"
 dependencies = [
@@ -19,10 +25,10 @@ dependencies = [
 [[package]]
 name = "gba"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "934d03c951e6bc8dd68547431a59c03e58652cde0073d3cb89610c02a13746c8"
+source = "git+https://github.com/rust-console/gba#a9425f45ced669dfbb4febcc0b0130c3a387cba2"
 dependencies = [
  "bitfrob",
+ "bracer",
  "voladdress",
 ]
 

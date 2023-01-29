@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gba = "0.10"
+gba = { version = "0.10", git = "https://github.com/rust-console/gba" }
 voladdress = "1.2.1"
 
 [profile.release]
