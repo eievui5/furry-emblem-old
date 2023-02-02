@@ -2,16 +2,13 @@
 #![no_main]
 
 mod console;
+mod game;
 mod tools;
 mod transform;
 
-use gba::Align4;
 use core::fmt::Write;
-use crate::console::VRAM_BLOCK0;
 use crate::console::VRAM_OBJS;
 use crate::console::wait_vblank;
-use crate::transform::{AxisX, AxisY};
-use crate::transform::Vector2D;
 use gba::interrupts::IrqBits;
 use gba::mgba::MgbaBufferedLogger;
 use gba::mgba::MgbaMessageLevel;
@@ -20,8 +17,6 @@ use gba::video::BackgroundControl;
 use gba::video::Color;
 use gba::video::DisplayControl;
 use gba::video::DisplayStatus;
-use gba::video::obj::{ObjAttr0, ObjAttr1, ObjAttr2, ObjDisplayStyle};
-use gba::video::TextEntry;
 use gba::video::VideoMode::_0 as VideoMode0;
 
 fn rotate_rgb_color(color: Color) -> Color {
@@ -72,69 +67,21 @@ extern "C" fn main() -> ! {
 			.with_irq_hblank(true)
 	);
 
-	// Clear OAM
-	for i in 0..128 {
-		mmio::OBJ_ATTR0.index(i).write(ObjAttr0::new()
-			.with_style(ObjDisplayStyle::NotDisplayed));
-	}
-
-	for (i, word) in include_aligned_resource!("res/luvui.4bpp").as_u32_slice().iter().enumerate() {
-		VRAM_BLOCK0.index(8 + i).write(*word);
-	}
-	for (i, word) in include_aligned_resource!("res/luvui.4bpp").as_u32_slice().iter().enumerate() {
-		VRAM_OBJS.index(i).write(*word);
-	}
-
-	// Set the First object palette to be all red
-	for i in 1..16 {
-		mmio::OBJ_PALETTE.index(i).write(Color::RED);
-	}
-
-	for y in 0..32 {
-		for x in 0..32 {
-			mmio::TextScreenblockAddress::new(8)
-				.row_col(x, y)
-				.write(
-					TextEntry::new()
-						.with_tile(1 + ((y & 1) + 2 * (x & 1)) as u16)
-				);
-		}
-	}
-
-	let mut position = Vector2D::<u16> { x: 0, y: 0 };
 	let mut input = console::Input::new();
+	let mut oam = console::Oam::new();
+	let mut game_state = game::GameState::new();
 
 	loop {
 		input.update();
+		oam.clean();
 
-		match input.get_held_x() {
-			Some(AxisX::Left) => position.x -= 1,
-			Some(AxisX::Right) => position.x += 1,
-			_ => {}
-		}
+		game_state.tick(&mut input, &mut oam);
 
-		match input.get_held_y() {
-			Some(AxisY::Up) => position.y -= 1,
-			Some(AxisY::Down) => position.y += 1,
-			_ => {}
-		}
-
-		if input.new.a() {
-			println!("Meow!");
-		}
-
-		mmio::BG_PALETTE.index(0).write(rotate_rgb_color(mmio::BG_PALETTE.index(0).read()));
+		mmio::BG_PALETTE.index(0).apply(|color| {
+			*color = rotate_rgb_color(*color)
+		});
 		wait_vblank();
-		// TODO: Make this not ugly
-		// I'd like to use shadow OAM w/DMA just to make accesses more elegant,
-		// but that may not be necessary.
-		mmio::OBJ_ATTR0.index(0).write(ObjAttr0::new()
-			.with_y(position.y));
-		mmio::OBJ_ATTR1.index(0).write(ObjAttr1::new()
-			.with_x(position.x)
-			.with_size(console::S16x16));
-		mmio::OBJ_ATTR2.index(0).write(ObjAttr2::new()
-			.with_tile_id(0));
+		oam.commit();
 	}
 }
 

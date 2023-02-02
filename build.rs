@@ -1,17 +1,39 @@
+use evgfx::convert;
+use evgfx::convert::write_graphics;
 use std::env;
-use std::io::{stdout, stderr, Write};
-use std::process::{Command, exit};
+use std::fs;
+use std::path::PathBuf;
+
+fn convert_image(config: &convert::Config, input_path: &str, output_path: &PathBuf, palette_path: &PathBuf) {
+	println!("cargo:rerun-if-changed={input_path}");
+	fs::create_dir_all(output_path.parent().unwrap()).unwrap();
+	fs::create_dir_all(palette_path.parent().unwrap()).unwrap();
+
+	let (palettes, tiles) = config.splice_image(
+		&evgfx::image::open(input_path).map_err(|err| {
+			format!("Failed to open {}: {err}", output_path.display())
+		}).unwrap()
+	);
+
+	write_graphics(tiles, output_path.to_str().unwrap()).unwrap();
+	palettes.write_rgb555(palette_path.to_str().unwrap()).unwrap();
+}
+
+macro_rules! make_image {
+	($config:expr, $resource:expr) => {
+		convert_image(
+			$config,
+			concat!("src/res/", $resource, ".png"),
+			&[&env::var("OUT_DIR").unwrap(), concat!("res/", $resource, ".4bpp")].iter().collect(),
+			&[&env::var("OUT_DIR").unwrap(), concat!("res/", $resource, ".pal")].iter().collect(),
+		);
+	}
+}
 
 fn main() {
-	let out_dir = format!("OUT={}", env::var("OUT_DIR").unwrap());
+	let config = convert::Config::new()
+		.with_tilesize(16, 16)
+		.with_transparency_color(0xFF, 0x00, 0xFF);
 
-	let output = Command::new("make")
-		.args(["resources", "-j", &out_dir])
-		.output()
-		.expect("failed to execute `make`");
-
-	stdout().write_all(&output.stdout).unwrap();
-	stderr().write_all(&output.stderr).unwrap();
-
-	exit(!output.status.success() as i32);
+	make_image!(&config, "luvui");
 }

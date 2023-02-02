@@ -1,14 +1,18 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
+#![allow(unused_macros)]
+#![allow(unused_imports)]
 pub use gba::bios::VBlankIntrWait as wait_vblank;
 
+use core::cmp::max;
 use crate::transform::AxisX;
 use crate::transform::AxisY;
 use crate::transform::Direction4;
 use gba::bios::IntrWait as wait_intr;
+use gba::interrupts::IrqBits;
 use gba::mmio;
 use gba::keys::KeyInput;
-use gba::prelude::IrqBits;
+use gba::video::obj::{ObjAttr, ObjAttr0, ObjDisplayStyle};
 use voladdress::{Safe, VolBlock};
 
 // Sprite sizes.
@@ -32,7 +36,7 @@ pub const VRAM_OBJS: VolBlock<u32, Safe, Safe, 0x1000> =
 
 /// Formats and prints a message to the emulator.
 /// The message is marked as "Info".
-#[macro_export] macro_rules! println {
+macro_rules! println {
 	($($args:expr),+) => {
 		let log_level = gba::mgba::MgbaMessageLevel::Info;
 		if let Ok(mut logger) = gba::prelude::MgbaBufferedLogger::try_new(log_level) {
@@ -41,14 +45,61 @@ pub const VRAM_OBJS: VolBlock<u32, Safe, Safe, 0x1000> =
 	}
 }
 
+pub(crate) use println;
+
 /// Formats and prints a message to the emulator.
 /// The message is marked as "Error".
-#[macro_export] macro_rules! eprintln {
+macro_rules! eprintln {
 	($($args:expr),+) => {
 		let log_level = gba::mgba::MgbaMessageLevel::Error;
 		if let Ok(mut logger) = gba::prelude::MgbaBufferedLogger::try_new(log_level) {
 			writeln!(logger, $($args),+).ok();
 		}
+	}
+}
+
+pub(crate) use eprintln;
+
+/// Stores a working copy of OAM (Shadow OAM) that can be sent to the PPU at the end of a frame.
+pub struct Oam {
+	index: usize,
+	last_index: usize,
+	entries: [ObjAttr; 128],
+}
+
+impl Oam {
+	pub fn new() -> Self {
+		Oam {
+			index: 128,
+			last_index: 0,
+			entries: [(ObjAttr::new()); 128]
+		}
+	}
+
+	/// Clears all dirty oam entries.
+	pub fn clean(&mut self) {
+		for i in 0..self.index {
+			self.entries[i].0 = ObjAttr0::new()
+				.with_style(ObjDisplayStyle::NotDisplayed);
+		}
+		self.last_index = self.index;
+		self.index = 0;
+	}
+
+	/// Pushes all entries to OAM, allowing the PPU to display them.
+	pub fn commit(&self) {
+		for i in 0..max(self.index, self.last_index) {
+			mmio::OBJ_ATTR0.index(i).write(self.entries[i].0);
+			mmio::OBJ_ATTR1.index(i).write(self.entries[i].1);
+			mmio::OBJ_ATTR2.index(i).write(self.entries[i].2);
+		}
+	}
+
+	/// Returns an OAM entry for the calling code to use as needed.
+	pub fn reserve_entry(&mut self) -> &mut ObjAttr {
+		let result = &mut self.entries[self.index];
+		self.index += 1;
+		result
 	}
 }
 

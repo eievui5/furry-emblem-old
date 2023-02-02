@@ -48,43 +48,49 @@ pub enum AxisY {
 /// A vector of two points: (x, y) represented by integers or fixed point numbers
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub struct Vector2D<T> {
-    /// The x coordinate
-    pub x: T,
-    /// The y coordinate
-    pub y: T,
+	/// The x coordinate
+	pub x: T,
+	/// The y coordinate
+	pub y: T,
+}
+
+impl<T: From<u8>> Vector2D<T> {
+	pub fn new() -> Self {
+		Self { x: T::from(0), y: T::from(0) }
+	}
 }
 
 impl<T: Add<Output = T>> Add<Vector2D<T>> for Vector2D<T> {
-    type Output = Vector2D<T>;
-    fn add(self, rhs: Vector2D<T>) -> Self::Output {
-        Vector2D {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
-    }
+	type Output = Vector2D<T>;
+	fn add(self, rhs: Vector2D<T>) -> Self::Output {
+		Vector2D {
+			x: self.x + rhs.x,
+			y: self.y + rhs.y,
+		}
+	}
 }
 
 impl<T: AddAssign> AddAssign<Self> for Vector2D<T> {
-    fn add_assign(&mut self, rhs: Self) {
-        self.x += rhs.x;
-        self.y += rhs.y;
-    }
+	fn add_assign(&mut self, rhs: Self) {
+		self.x += rhs.x;
+		self.y += rhs.y;
+	}
 }
 
 impl<T: Sub<Output = T>> Sub<Vector2D<T>> for Vector2D<T> {
-    type Output = Vector2D<T>;
-    fn sub(self, rhs: Vector2D<T>) -> Self::Output {
-        Vector2D {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
-    }
+	type Output = Vector2D<T>;
+	fn sub(self, rhs: Vector2D<T>) -> Self::Output {
+		Vector2D {
+			x: self.x - rhs.x,
+			y: self.y - rhs.y,
+		}
+	}
 }
 
 impl<T: SubAssign> SubAssign<Self> for Vector2D<T> {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.x -= rhs.x;
-        self.y -= rhs.y;
-    }
+	fn sub_assign(&mut self, rhs: Self) {
+		self.x -= rhs.x;
+		self.y -= rhs.y;
+	}
 }
 
