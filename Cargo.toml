@@ -10,7 +10,7 @@ gba = { version = "0.10", git = "https://github.com/rust-console/gba" }
 voladdress = "1.2.1"
 
 [build-dependencies]
-evgfx = { git = "https://github.com/eievui5/evgfx" }
+evgfx = { path = "https://github.com/eievui5/evgfx" }
 
 [profile.release]
 lto = true

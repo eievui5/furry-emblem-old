@@ -1,5 +1,4 @@
 use evgfx::convert;
-use evgfx::convert::write_graphics;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -9,13 +8,9 @@ fn convert_image(config: &convert::Config, input_path: &str, output_path: &PathB
 	fs::create_dir_all(output_path.parent().unwrap()).unwrap();
 	fs::create_dir_all(palette_path.parent().unwrap()).unwrap();
 
-	let (palettes, tiles) = config.splice_image(
-		&evgfx::image::open(input_path).map_err(|err| {
-			format!("Failed to open {}: {err}", output_path.display())
-		}).unwrap()
-	);
+	let (palettes, tiles) = config.convert_image(input_path).unwrap();
 
-	write_graphics(tiles, output_path.to_str().unwrap()).unwrap();
+	tiles.write_4bpp(output_path.to_str().unwrap()).unwrap();
 	palettes.write_rgb555(palette_path.to_str().unwrap()).unwrap();
 }
 
