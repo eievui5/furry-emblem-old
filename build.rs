@@ -31,4 +31,8 @@ fn main() {
 		.with_transparency_color(0xFF, 0x00, 0xFF);
 
 	make_image!(&config, "luvui");
+
+	let config = convert::Config::new()
+		.with_transparency_color(0xFF, 0x00, 0xFF);
+	make_image!(&config, "cursor");
 }

@@ -3,7 +3,8 @@
 #![allow(unused_macros)]
 #![allow(unused_imports)]
 pub use gba::bios::VBlankIntrWait as wait_vblank;
-
+use gba::video::Color;
+use core::fmt::Write;
 use core::cmp::max;
 use crate::transform::AxisX;
 use crate::transform::AxisY;
@@ -59,6 +60,44 @@ macro_rules! eprintln {
 }
 
 pub(crate) use eprintln;
+
+// VRAM allocation is fun because unlike OAM you can't just reset it every frame.
+// A smarter allocator would probably allow you to free memory,
+// but I'd much rather just clear it between game states.
+// If "scratch" tiles are needed then they should just be allocated ahead of time.
+// But then you may as well ditch the runtime code altogether and generate a bunch of constants.
+pub struct Vram {
+	pub index: usize,
+	pub palette: usize,
+}
+
+impl Vram {
+	pub fn new() -> Self {
+		Self { index: 0, palette: 0 }
+	}
+
+	pub fn reset(&mut self) {
+		self.index = 0;
+	}
+
+	pub fn load_4bpp_obj_texture(&mut self, data: &[u32]) -> u16 {
+		let id = self.index;
+		for (i, word) in data.iter().enumerate() {
+			VRAM_OBJS.index(self.index * 8 + i).write(*word);
+		}
+		self.index += data.len() / 8;
+		id as u16
+	}
+
+	pub fn load_palette(&mut self, data: &[u16]) -> u16 {
+		let id = self.palette;
+		for (i, word) in data.iter().enumerate() {
+			mmio::OBJ_PALETTE.index(self.palette * 16 + i).write(Color(*word));
+		}
+		self.palette += data.len() / 16;
+		id as u16
+	}
+}
 
 /// Stores a working copy of OAM (Shadow OAM) that can be sent to the PPU at the end of a frame.
 pub struct Oam {

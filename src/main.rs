@@ -7,7 +7,6 @@ mod tools;
 mod transform;
 
 use core::fmt::Write;
-use crate::console::VRAM_OBJS;
 use crate::console::wait_vblank;
 use gba::interrupts::IrqBits;
 use gba::mgba::MgbaBufferedLogger;

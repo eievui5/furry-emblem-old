@@ -1,27 +1,73 @@
-use gba::mmio;
-use gba::video::Color;
 use gba::Align4;
-use crate::VRAM_OBJS;
-use crate::console::{Input, Oam, S16x16};
+use crate::console::{Input, Vram, Oam, S8x8};
 use crate::transform::{AxisX, AxisY, Vector2D};
 use crate::tools::include_aligned_resource;
 
-use gba::video::obj::{ObjAttr0, ObjAttr1, ObjAttr2};
+use gba::video::obj::{ObjAttr, ObjAttr0, ObjAttr1, ObjAttr2};
 
 struct Cursor {
-	position: Vector2D<u16>,
+	position: Vector2D<i16>,
+	tile_id: u16,
+	palette: u16,
+	bounce_timer: u8,
 }
 
 impl Cursor {
-	fn draw(&self, oam: &mut Oam) {
+	fn draw(&mut self, oam: &mut Oam) {
+		fn bounce_offset(timer: &mut u8) -> i16 {
+			macro_rules! range_value {
+				{$name:ident: $default:literal, $($low:literal - $high:literal => $value:literal),*$(,)?} => {
+					match *$name {
+						#[allow(unused_comparisons)]
+						$($name if $name >= $low && $name < $high => $value,)+
+						_ => {
+							*$name = 0;
+							$default
+						}
+					}
+				}
+			}
+
+			*timer += 1;
+			range_value! {
+				timer: 0,
+				 0 -  5 => 0,
+				 5 - 10 => 1,
+				10 - 15 => 2,
+				15 - 20 => 3,
+				20 - 40 => 4,
+				40 - 45 => 3,
+				45 - 50 => 2,
+				50 - 55 => 1,
+				55 - 75 => 0,
+			}
+		}
+
+		let make_corner = |x_off, y_off, hflip, vflip| {
+			let mut cursor_base = ObjAttr::new();
+			cursor_base.0 = ObjAttr0::new()
+				.with_y((self.position.y * 16 + y_off) as u16);
+			cursor_base.1 = ObjAttr1::new()
+				.with_x((self.position.x * 16 + x_off) as u16)
+				.with_hflip(hflip)
+				.with_vflip(vflip)
+				.with_size(S8x8);
+			cursor_base.2 = ObjAttr2::new()
+				.with_tile_id(self.tile_id)
+				.with_palbank(self.palette);
+			cursor_base
+		};
+
+		let offset = bounce_offset(&mut self.bounce_timer);
+
 		let sprite = oam.reserve_entry();
-		sprite.0 = ObjAttr0::new()
-			.with_y(self.position.y * 16);
-		sprite.1 = ObjAttr1::new()
-			.with_x(self.position.x * 16)
-			.with_size(S16x16);
-		sprite.2 = ObjAttr2::new()
-			.with_tile_id(0);
+		*sprite = make_corner(-offset, -offset, false, false);
+		let sprite = oam.reserve_entry();
+		*sprite = make_corner(8 + offset, -offset, true, false);
+		let sprite = oam.reserve_entry();
+		*sprite = make_corner(-offset, 8 + offset, false, true);
+		let sprite = oam.reserve_entry();
+		*sprite = make_corner(8 + offset, 8 + offset, true, true);
 	}
 }
 
@@ -31,18 +77,20 @@ pub struct GameState {
 
 impl GameState {
 	pub fn new() -> Self {
-		let result = Self {
-			cursor: Cursor { position: Vector2D::new() },
-		};
+		let mut vram = Vram::new();
 
-		for (i, word) in include_aligned_resource!("luvui.4bpp").as_u32_slice().iter().enumerate() {
-			VRAM_OBJS.index(i).write(*word);
+		Self {
+			cursor: Cursor {
+				position: Vector2D::new(),
+				tile_id: vram.load_4bpp_obj_texture(
+					&include_aligned_resource!("cursor.4bpp").as_u32_slice()
+				),
+				palette: vram.load_palette(
+					&include_aligned_resource!("cursor.pal").as_u16_slice()
+				),
+				bounce_timer: 0,
+			},
 		}
-		for (i, word) in include_aligned_resource!("luvui.pal").as_u16_slice().iter().enumerate() {
-			mmio::OBJ_PALETTE.index(i).write(Color(*word));
-		}
-
-		result
 	}
 
 	pub fn tick(&mut self, input: &Input, oam: &mut Oam) {

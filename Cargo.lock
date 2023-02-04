@@ -135,6 +135,7 @@ checksum = "7fcaabb2fef8c910e7f4c7ce9f67a1283a1715879a7c230ca9d6d1ae31f16d91"
 [[package]]
 name = "evgfx"
 version = "0.1.0"
+source = "git+https://github.com/eievui5/evgfx#e8e599621f077f73ce2769f0a00bd88fd46abd35"
 dependencies = [
  "image",
 ]
