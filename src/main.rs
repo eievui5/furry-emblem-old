@@ -1,5 +1,7 @@
 #![no_std]
 #![no_main]
+#![feature(exclusive_range_pattern)]
+#![feature(int_roundings)]
 
 mod console;
 mod game;

@@ -88,7 +88,7 @@ impl Vram {
 		for (i, word) in data.iter().enumerate() {
 			VRAM_OBJS.index(self.index * 8 + i).write(*word);
 		}
-		self.index += data.len() / 8;
+		self.index += data.len().div_ceil(8);
 		id as u16
 	}
 
@@ -99,7 +99,7 @@ impl Vram {
 				.index(self.palette * 16 + i)
 				.write(Color(*word));
 		}
-		self.palette += data.len() / 16;
+		self.palette += data.len().div_ceil(16);
 		id as u16
 	}
 }
