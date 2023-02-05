@@ -96,7 +96,7 @@ impl Vram {
 		let id = self.palette;
 		for (i, word) in data.iter().enumerate() {
 			mmio::OBJ_PALETTE
-				.index(self.palette * 16 + i)
+				.index(1 + self.palette * 16 + i)
 				.write(Color(*word));
 		}
 		self.palette += data.len().div_ceil(16);
