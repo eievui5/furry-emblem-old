@@ -6,8 +6,8 @@ mod game;
 mod tools;
 mod transform;
 
-use core::fmt::Write;
 use crate::console::wait_vblank;
+use core::fmt::Write;
 use gba::interrupts::IrqBits;
 use gba::mgba::MgbaBufferedLogger;
 use gba::mgba::MgbaMessageLevel;
@@ -44,26 +44,22 @@ extern "C" fn main() -> ! {
 			.with_video_mode(VideoMode0)
 			.with_show_bg0(true)
 			.with_show_obj(true)
-			.with_obj_vram_1d(true)
+			.with_obj_vram_1d(true),
 	);
 
 	mmio::BG0CNT.write(
 		BackgroundControl::new()
 			.with_charblock(0)
-			.with_screenblock(8)
+			.with_screenblock(8),
 	);
 
 	mmio::IF.write(IrqBits::new());
-	mmio::IE.write(
-		IrqBits::new()
-			.with_vblank(true)
-			.with_hblank(true)
-	);
+	mmio::IE.write(IrqBits::new().with_vblank(true).with_hblank(true));
 	mmio::IME.write(true);
 	mmio::DISPSTAT.write(
 		DisplayStatus::new()
 			.with_irq_vblank(true)
-			.with_irq_hblank(true)
+			.with_irq_hblank(true),
 	);
 
 	let mut input = console::Input::new();
@@ -76,9 +72,9 @@ extern "C" fn main() -> ! {
 
 		game_state.tick(&mut input, &mut oam);
 
-		mmio::BG_PALETTE.index(0).apply(|color| {
-			*color = rotate_rgb_color(*color)
-		});
+		mmio::BG_PALETTE
+			.index(0)
+			.apply(|color| *color = rotate_rgb_color(*color));
 		wait_vblank();
 		oam.commit();
 	}

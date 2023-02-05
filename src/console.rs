@@ -2,18 +2,20 @@
 #![allow(non_upper_case_globals)]
 #![allow(unused_macros)]
 #![allow(unused_imports)]
+
 pub use gba::bios::VBlankIntrWait as wait_vblank;
-use gba::video::Color;
-use core::fmt::Write;
-use core::cmp::max;
+
 use crate::transform::AxisX;
 use crate::transform::AxisY;
 use crate::transform::Direction4;
+use core::cmp::max;
+use core::fmt::Write;
 use gba::bios::IntrWait as wait_intr;
 use gba::interrupts::IrqBits;
-use gba::mmio;
 use gba::keys::KeyInput;
+use gba::mmio;
 use gba::video::obj::{ObjAttr, ObjAttr0, ObjDisplayStyle};
+use gba::video::Color;
 use voladdress::{Safe, VolBlock};
 
 // Sprite sizes.
@@ -30,10 +32,8 @@ pub const V8x32: u16 = 1;
 pub const V16x32: u16 = 2;
 pub const V32x64: u16 = 3;
 
-pub const VRAM_BLOCK0: VolBlock<u32, Safe, Safe, 0x1000> =
-	unsafe { VolBlock::new(0x06000000) };
-pub const VRAM_OBJS: VolBlock<u32, Safe, Safe, 0x1000> =
-	unsafe { VolBlock::new(0x06010000) };
+pub const VRAM_BLOCK0: VolBlock<u32, Safe, Safe, 0x1000> = unsafe { VolBlock::new(0x06000000) };
+pub const VRAM_OBJS: VolBlock<u32, Safe, Safe, 0x1000> = unsafe { VolBlock::new(0x06010000) };
 
 /// Formats and prints a message to the emulator.
 /// The message is marked as "Info".
@@ -73,7 +73,10 @@ pub struct Vram {
 
 impl Vram {
 	pub fn new() -> Self {
-		Self { index: 0, palette: 0 }
+		Self {
+			index: 0,
+			palette: 0,
+		}
 	}
 
 	pub fn reset(&mut self) {
@@ -92,7 +95,9 @@ impl Vram {
 	pub fn load_palette(&mut self, data: &[u16]) -> u16 {
 		let id = self.palette;
 		for (i, word) in data.iter().enumerate() {
-			mmio::OBJ_PALETTE.index(self.palette * 16 + i).write(Color(*word));
+			mmio::OBJ_PALETTE
+				.index(self.palette * 16 + i)
+				.write(Color(*word));
 		}
 		self.palette += data.len() / 16;
 		id as u16
@@ -111,15 +116,14 @@ impl Oam {
 		Oam {
 			index: 128,
 			last_index: 0,
-			entries: [(ObjAttr::new()); 128]
+			entries: [(ObjAttr::new()); 128],
 		}
 	}
 
 	/// Clears all dirty oam entries.
 	pub fn clean(&mut self) {
 		for i in 0..self.index {
-			self.entries[i].0 = ObjAttr0::new()
-				.with_style(ObjDisplayStyle::NotDisplayed);
+			self.entries[i].0 = ObjAttr0::new().with_style(ObjDisplayStyle::NotDisplayed);
 		}
 		self.last_index = self.index;
 		self.index = 0;

@@ -5,7 +5,10 @@ use core::fmt::Debug;
 use core::ops::*;
 
 pub enum Direction4 {
-	Up, Right, Down, Left
+	Up,
+	Right,
+	Down,
+	Left,
 }
 
 impl Direction4 {
@@ -38,11 +41,13 @@ impl Direction4 {
 }
 
 pub enum AxisX {
-	Left, Right
+	Left,
+	Right,
 }
 
 pub enum AxisY {
-	Up, Down
+	Up,
+	Down,
 }
 
 /// A vector of two points: (x, y) represented by integers or fixed point numbers
@@ -56,7 +61,10 @@ pub struct Vector2D<T> {
 
 impl<T: From<u8>> Vector2D<T> {
 	pub fn new() -> Self {
-		Self { x: T::from(0), y: T::from(0) }
+		Self {
+			x: T::from(0),
+			y: T::from(0),
+		}
 	}
 }
 
@@ -93,4 +101,3 @@ impl<T: SubAssign> SubAssign<Self> for Vector2D<T> {
 		self.y -= rhs.y;
 	}
 }
-

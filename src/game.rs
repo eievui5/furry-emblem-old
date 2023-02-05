@@ -1,9 +1,8 @@
-use gba::Align4;
-use crate::console::{Input, Vram, Oam, S8x8};
-use crate::transform::{AxisX, AxisY, Vector2D};
+use crate::console::{Input, Oam, S8x8, Vram};
 use crate::tools::include_aligned_resource;
-
+use crate::transform::{AxisX, AxisY, Vector2D};
 use gba::video::obj::{ObjAttr, ObjAttr0, ObjAttr1, ObjAttr2};
+use gba::Align4;
 
 struct Cursor {
 	position: Vector2D<i16>,
@@ -45,8 +44,7 @@ impl Cursor {
 
 		let make_corner = |x_off, y_off, hflip, vflip| {
 			let mut cursor_base = ObjAttr::new();
-			cursor_base.0 = ObjAttr0::new()
-				.with_y((self.position.y * 16 + y_off) as u16);
+			cursor_base.0 = ObjAttr0::new().with_y((self.position.y * 16 + y_off) as u16);
 			cursor_base.1 = ObjAttr1::new()
 				.with_x((self.position.x * 16 + x_off) as u16)
 				.with_hflip(hflip)
@@ -83,11 +81,9 @@ impl GameState {
 			cursor: Cursor {
 				position: Vector2D::new(),
 				tile_id: vram.load_4bpp_obj_texture(
-					&include_aligned_resource!("cursor.4bpp").as_u32_slice()
+					&include_aligned_resource!("cursor.4bpp").as_u32_slice(),
 				),
-				palette: vram.load_palette(
-					&include_aligned_resource!("cursor.pal").as_u16_slice()
-				),
+				palette: vram.load_palette(&include_aligned_resource!("cursor.pal").as_u16_slice()),
 				bounce_timer: 0,
 			},
 		}
