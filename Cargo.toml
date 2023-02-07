@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 gba = { version = "0.10", git = "https://github.com/rust-console/gba" }
 voladdress = "1.2.1"
+level-converter = { path = "tools/level-converter/" }
 
 [build-dependencies]
 evgfx = { git = "https://github.com/eievui5/evgfx" }

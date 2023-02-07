@@ -25,7 +25,7 @@ macro_rules! make_image {
 	($config:expr, $resource:expr) => {
 		convert_image(
 			$config,
-			concat!("src/res/", $resource, ".png"),
+			concat!("src/assets/", $resource, ".png"),
 			&[
 				&env::var("OUT_DIR").unwrap(),
 				concat!("res/", $resource, ".4bpp"),
@@ -34,7 +34,7 @@ macro_rules! make_image {
 			.collect(),
 			&[
 				&env::var("OUT_DIR").unwrap(),
-				concat!("res/", $resource, ".pal"),
+				concat!("assets/", $resource, ".pal"),
 			]
 			.iter()
 			.collect(),
@@ -47,10 +47,10 @@ fn main() {
 		.with_tilesize(16, 16)
 		.with_transparency_color(0xFF, 0x00, 0xFF);
 
-	make_image!(&config, "luvui");
+	make_image!(&config, "gfx/luvui");
 
 	let config = convert::Config::new()
 		.with_transparency_color(0xFF, 0x00, 0xFF);
 
-	make_image!(&config, "cursor");
+	make_image!(&config, "gfx/cursor");
 }

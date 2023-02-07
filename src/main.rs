@@ -8,7 +8,7 @@ mod game;
 mod tools;
 mod transform;
 
-use crate::console::wait_vblank;
+use crate::console::{println, wait_vblank};
 use core::fmt::Write;
 use gba::interrupts::IrqBits;
 use gba::mgba::MgbaBufferedLogger;
@@ -19,6 +19,28 @@ use gba::video::Color;
 use gba::video::DisplayControl;
 use gba::video::DisplayStatus;
 use gba::video::VideoMode::_0 as VideoMode0;
+use level_converter::load_level;
+
+#[derive(Debug)]
+struct LevelData<'a> {
+	width: u16,
+	height: u16,
+	map: &'a [u8],
+	units: &'a [UnitData<'a>]
+}
+
+#[derive(Debug)]
+struct UnitData<'a> {
+	name: &'a str,
+	x: u16,
+	y: u16,
+	/// Determines whether or not a unit is marked as a boss.
+	/// Object Property: boss (boolean).
+	is_boss: bool,
+	level: u8,
+} 
+
+const LEVEL: LevelData = load_level!("src/assets/levels/debug-level.tmx");
 
 fn rotate_rgb_color(color: Color) -> Color {
 	match (color.red(), color.green(), color.blue()) {
@@ -41,6 +63,7 @@ fn rotate_rgb_color(color: Color) -> Color {
 
 #[no_mangle]
 extern "C" fn main() -> ! {
+	println!("{LEVEL:#?}");
 	mmio::DISPCNT.write(
 		DisplayControl::new()
 			.with_video_mode(VideoMode0)
