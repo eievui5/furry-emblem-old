@@ -28,7 +28,7 @@ macro_rules! make_image {
 			concat!("src/assets/", $resource, ".png"),
 			&[
 				&env::var("OUT_DIR").unwrap(),
-				concat!("res/", $resource, ".4bpp"),
+				concat!("assets/", $resource, ".4bpp"),
 			]
 			.iter()
 			.collect(),
@@ -48,6 +48,7 @@ fn main() {
 		.with_transparency_color(0xFF, 0x00, 0xFF);
 
 	make_image!(&config, "gfx/luvui");
+	make_image!(&config, "gfx/tree_tiles");
 
 	let config = convert::Config::new()
 		.with_transparency_color(0xFF, 0x00, 0xFF);

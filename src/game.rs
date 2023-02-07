@@ -1,6 +1,8 @@
 use crate::console::*;
 use crate::tools::include_aligned_resource;
 use crate::transform::{AxisX, AxisY, Vector2D};
+use gba::mmio::TextScreenblockAddress;
+use gba::video::TextEntry;
 use gba::video::obj::{ObjAttr, ObjAttr0, ObjAttr1, ObjAttr2};
 use gba::Align4;
 
@@ -24,9 +26,9 @@ impl Cursor {
 			position: Vector2D { x: 0, y: 0 },
 			sprite_position: Vector2D { x: 0, y: 0 },
 			tile_id: vram.load_4bpp_obj_texture(
-				&include_aligned_resource!("cursor.4bpp").as_u32_slice(),
+				&include_aligned_resource!("gfx/cursor.4bpp").as_u32_slice(),
 			),
-			palette: vram.load_palette(&include_aligned_resource!("cursor.pal").as_u16_slice()),
+			palette: vram.load_obj_palette(&include_aligned_resource!("gfx/cursor.pal").as_u16_slice()),
 			bounce_timer: 0,
 		}
 	}
@@ -87,6 +89,25 @@ impl Cursor {
 		*sprite = make_corner(8 + offset, 8 + offset, true, true);
 	}
 }
+ 
+#[derive(Debug)]
+pub struct UnitData<'a> {
+	pub name: &'a str,
+	pub x: u16,
+	pub y: u16,
+	/// Determines whether or not a unit is marked as a boss.
+	/// Object Property: boss (boolean).
+	pub is_boss: bool,
+	pub level: u8,
+}
+
+#[derive(Debug)]
+pub struct LevelData<'a> {
+	pub width: u16,
+	pub height: u16,
+	pub map: &'a [u8],
+	pub units: &'a [UnitData<'a>]
+}
 
 struct Unit {
 	position: Vector2D<i16>,
@@ -100,9 +121,9 @@ impl Unit {
 		Self {
 			position: Vector2D { x: 0, y: 0 },
 			tile_id: vram.load_4bpp_obj_texture(
-				&include_aligned_resource!("luvui.4bpp").as_u32_slice(),
+				&include_aligned_resource!("gfx/luvui.4bpp").as_u32_slice(),
 			),
-			palette: vram.load_palette(&include_aligned_resource!("luvui.pal").as_u16_slice()),
+			palette: vram.load_obj_palette(&include_aligned_resource!("gfx/luvui.pal").as_u16_slice()),
 			animation_timer: 0,
 		}
 	}
@@ -123,20 +144,71 @@ impl Unit {
 	}
 }
 
-pub struct GameState {
+pub struct GameState<'a> {
 	cursor: Cursor,
-	units: [Unit; 1],
+	units: [Unit; 2],
 	selected_unit: Option<usize>,
+	tileset_id: u16,
+	tileset_palette: u16,
+	level: &'a LevelData<'a>
 }
 
-impl GameState {
-	pub fn new() -> Self {
+impl<'a> GameState<'a> {
+	pub fn new(level: &'a LevelData) -> Self {
 		let mut vram = Vram::new();
+		vram.load_4bpp_bg_texture(
+			&[0, 0, 0, 0, 0, 0, 0, 0],
+		);
+		let tileset_id = vram.load_4bpp_bg_texture(
+			&include_aligned_resource!("gfx/tree_tiles.4bpp").as_u32_slice(),
+		);
+		let tileset_palette = vram.load_bg_palette(
+			&include_aligned_resource!("gfx/tree_tiles.pal").as_u16_slice(),
+		);
+
+		for y in 0..level.height {
+			for x in 0..level.width {
+				let tile = level.map[(x + y * level.width) as usize] as u16;
+				let x = x * 2;
+				let y = y * 2;
+				TextScreenblockAddress::new(8)
+					.row_col(y.into(), x.into())
+					.write(
+						TextEntry::new()
+							.with_tile(tileset_id + tile * 4 + 0)
+							.with_palbank(tileset_palette)
+					);
+				TextScreenblockAddress::new(8)
+					.row_col(y.into(), (x + 1).into())
+					.write(
+						TextEntry::new()
+							.with_tile(tileset_id + tile * 4 + 1)
+							.with_palbank(tileset_palette)
+					);
+				TextScreenblockAddress::new(8)
+					.row_col((y + 1).into(), x.into())
+					.write(
+						TextEntry::new()
+							.with_tile(tileset_id + tile * 4 + 2)
+							.with_palbank(tileset_palette)
+					);
+				TextScreenblockAddress::new(8)
+					.row_col((y + 1).into(), (x + 1).into())
+					.write(
+						TextEntry::new()
+							.with_tile(tileset_id + tile * 4 + 3)
+							.with_palbank(tileset_palette)
+					);
+			}
+		}
 
 		Self {
 			cursor: Cursor::new(&mut vram),
-			units: [Unit::new(&mut vram)],
+			units: [Unit::new(&mut vram), Unit::new(&mut vram)],
 			selected_unit: None,
+			tileset_id,
+			tileset_palette,
+			level
 		}
 	}
 

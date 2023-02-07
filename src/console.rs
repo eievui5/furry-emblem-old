@@ -68,19 +68,30 @@ pub(crate) use eprintln;
 // But then you may as well ditch the runtime code altogether and generate a bunch of constants.
 pub struct Vram {
 	pub index: usize,
-	pub palette: usize,
+	pub bg_palette: usize,
+	pub obj_palette: usize,
 }
 
 impl Vram {
 	pub fn new() -> Self {
 		Self {
 			index: 0,
-			palette: 0,
+			bg_palette: 0,
+			obj_palette: 0,
 		}
 	}
 
 	pub fn reset(&mut self) {
 		self.index = 0;
+	}
+
+	pub fn load_4bpp_bg_texture(&mut self, data: &[u32]) -> u16 {
+		let id = self.index;
+		for (i, word) in data.iter().enumerate() {
+			VRAM_BLOCK0.index(self.index * 8 + i).write(*word);
+		}
+		self.index += data.len().div_ceil(8);
+		id as u16
 	}
 
 	pub fn load_4bpp_obj_texture(&mut self, data: &[u32]) -> u16 {
@@ -92,14 +103,25 @@ impl Vram {
 		id as u16
 	}
 
-	pub fn load_palette(&mut self, data: &[u16]) -> u16 {
-		let id = self.palette;
+	pub fn load_bg_palette(&mut self, data: &[u16]) -> u16 {
+		let id = self.bg_palette;
 		for (i, word) in data.iter().enumerate() {
-			mmio::OBJ_PALETTE
-				.index(1 + self.palette * 16 + i)
+			mmio::BG_PALETTE
+				.index(1 + self.bg_palette * 16 + i)
 				.write(Color(*word));
 		}
-		self.palette += data.len().div_ceil(16);
+		self.bg_palette += data.len().div_ceil(16);
+		id as u16
+	}
+
+	pub fn load_obj_palette(&mut self, data: &[u16]) -> u16 {
+		let id = self.obj_palette;
+		for (i, word) in data.iter().enumerate() {
+			mmio::OBJ_PALETTE
+				.index(1 + self.obj_palette * 16 + i)
+				.write(Color(*word));
+		}
+		self.obj_palette += data.len().div_ceil(16);
 		id as u16
 	}
 }

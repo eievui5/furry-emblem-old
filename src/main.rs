@@ -8,6 +8,7 @@ mod game;
 mod tools;
 mod transform;
 
+use crate::game::{LevelData, UnitData};
 use crate::console::{println, wait_vblank};
 use core::fmt::Write;
 use gba::interrupts::IrqBits;
@@ -21,26 +22,7 @@ use gba::video::DisplayStatus;
 use gba::video::VideoMode::_0 as VideoMode0;
 use level_converter::load_level;
 
-#[derive(Debug)]
-struct LevelData<'a> {
-	width: u16,
-	height: u16,
-	map: &'a [u8],
-	units: &'a [UnitData<'a>]
-}
-
-#[derive(Debug)]
-struct UnitData<'a> {
-	name: &'a str,
-	x: u16,
-	y: u16,
-	/// Determines whether or not a unit is marked as a boss.
-	/// Object Property: boss (boolean).
-	is_boss: bool,
-	level: u8,
-} 
-
-const LEVEL: LevelData = load_level!("src/assets/levels/debug-level.tmx");
+const LEVEL: game::LevelData = load_level!("src/assets/levels/debug-level.tmx");
 
 fn rotate_rgb_color(color: Color) -> Color {
 	match (color.red(), color.green(), color.blue()) {
@@ -89,7 +71,7 @@ extern "C" fn main() -> ! {
 
 	let mut input = console::Input::new();
 	let mut oam = console::Oam::new();
-	let mut game_state = game::GameState::new();
+	let mut game_state = game::GameState::new(&LEVEL);
 
 	loop {
 		input.update();
@@ -100,6 +82,13 @@ extern "C" fn main() -> ! {
 		mmio::BG_PALETTE
 			.index(0)
 			.apply(|color| *color = rotate_rgb_color(*color));
+
+		//for i in 1..16 {
+		//	mmio::OBJ_PALETTE
+		//		.index(i)
+		//		.apply(|color| *color = rotate_rgb_color(*color));
+		//}
+
 		wait_vblank();
 		oam.commit();
 	}
