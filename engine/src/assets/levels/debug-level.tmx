@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.1" orientation="orthogonal" renderorder="right-down" width="15" height="10" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="4">
+<map version="1.9" tiledversion="1.9.1" orientation="orthogonal" renderorder="right-down" width="15" height="10" tilewidth="16" tileheight="16" infinite="0" nextlayerid="4" nextobjectid="12">
  <tileset firstgid="1" source="tilesets/debug-tileset.tsx"/>
  <tileset firstgid="3" source="tilesets/unit-icons.tsx"/>
  <layer id="1" name="Tile Layer 1" width="15" height="10">
@@ -24,9 +24,9 @@
     <property name="level" type="int" value="1"/>
    </properties>
   </object>
-  <object id="2" name="Kitty" class="unit" gid="3" x="16" y="32" width="16" height="16">
+  <object id="2" class="unit" gid="3" x="16" y="128" width="16" height="16">
    <properties>
-    <property name="boss" type="bool" value="true"/>
+    <property name="boss" type="bool" value="false"/>
     <property name="items" value="Iron Sword"/>
     <property name="level" type="int" value="1"/>
    </properties>

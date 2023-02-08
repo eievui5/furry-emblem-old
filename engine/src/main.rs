@@ -8,9 +8,10 @@ mod game;
 mod tools;
 mod transform;
 
-use crate::game::{LevelData, UnitData};
-use crate::console::{println, wait_vblank};
 use core::fmt::Write;
+use crate::console::{println, wait_vblank};
+use crate::game::{LevelData, UnitData};
+use crate::tools::include_resource;
 use gba::interrupts::IrqBits;
 use gba::mgba::MgbaBufferedLogger;
 use gba::mgba::MgbaMessageLevel;
@@ -20,9 +21,8 @@ use gba::video::Color;
 use gba::video::DisplayControl;
 use gba::video::DisplayStatus;
 use gba::video::VideoMode::_0 as VideoMode0;
-use level_converter::load_level;
 
-const LEVEL: game::LevelData = load_level!("src/assets/levels/debug-level.tmx");
+const LEVEL: LevelData = include_resource!("levels/debug-level.rs");
 
 fn rotate_rgb_color(color: Color) -> Color {
 	match (color.red(), color.green(), color.blue()) {

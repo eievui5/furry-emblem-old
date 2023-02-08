@@ -1,4 +1,5 @@
 use evgfx::convert;
+use level_converter::load_level;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -54,4 +55,12 @@ fn main() {
 		.with_transparency_color(0xFF, 0x00, 0xFF);
 
 	make_image!(&config, "gfx/cursor");
+
+	println!("cargo:rerun-if-changed={}/assets/levels/debug-level.rs", &env::var("OUT_DIR").unwrap());
+	let level = load_level("src/assets/levels/debug-level.tmx").to_string();
+	fs::create_dir_all(&format!("{}/assets/levels/", &env::var("OUT_DIR").unwrap())).unwrap();
+	fs::write(
+		&format!("{}/assets/levels/debug-level.rs", &env::var("OUT_DIR").unwrap()),
+		level,
+	).unwrap();
 }

@@ -6,3 +6,12 @@ macro_rules! include_aligned_resource {
 }
 
 pub(crate) use include_aligned_resource;
+
+/// Includes a resource from cargo's output directory.
+macro_rules! include_resource {
+	($file:expr $(,)?) => {
+		include!(concat!(env!("OUT_DIR"), "/assets/", $file))
+	};
+}
+
+pub(crate) use include_resource;
