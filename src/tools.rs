@@ -15,3 +15,11 @@ macro_rules! include_resource {
 }
 
 pub(crate) use include_resource;
+
+macro_rules! load_level {
+	($file:expr $(,)?) => {
+		include!(concat!(env!("OUT_DIR"), "/assets/maps/", $file, ".rs"))
+	};
+}
+
+pub(crate) use load_level;
